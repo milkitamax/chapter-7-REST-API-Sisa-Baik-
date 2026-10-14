@@ -21,3 +21,13 @@ Skenario mencakup:
 
 ## Catatan
 Hasil ini merujuk pada pengujian sebelumnya. Jalankan kembali pengujian akhir setelah seluruh file proyek selesai diperbarui untuk memastikan hasilnya tetap sesuai.
+
+## Pengujian Konkurensi
+
+- Script: scripts/uji-konkurensi.js
+- Penawaran uji: ID 10
+- Dua request pesanan dikirim secara bersamaan.
+- Hasil aktual: PASS
+- Status HTTP: satu 201 Created dan satu 409 Conflict.
+- Stok akhir: 0.
+- Kesimpulan: stok satu tidak berhasil dipesan dua kali.
