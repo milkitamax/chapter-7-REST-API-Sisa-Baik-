@@ -4,95 +4,264 @@
 
 SisaBaik merupakan aplikasi untuk membantu penyedia menawarkan makanan berlebih yang masih layak dikonsumsi. Backend menggunakan REST API dengan Node.js, Express.js, dan PostgreSQL.
 
-## 2. Persiapan
+Proyek ini menggunakan data fiktif untuk praktikum lokal dan belum ditujukan sebagai layanan transaksi publik.
 
+## 2. Teknologi dan Persiapan
+
+Teknologi:
+- Node.js
+- Express.js
+- PostgreSQL
+- JavaScript
+
+Persiapan:
 1. Pastikan Node.js dan PostgreSQL sudah terpasang.
-2. Siapkan konfigurasi database pada file `.env` berdasarkan `.env.example`.
-3. Instal dependensi dengan perintah `npm install`.
-4. Jalankan server dengan perintah `npm run dev`.
+2. Siapkan konfigurasi database pada `.env` berdasarkan `.env.example`.
+3. Instal dependensi menggunakan `npm install`.
+4. Jalankan server menggunakan `npm run dev`.
 
 Jangan membagikan file `.env` karena berisi konfigurasi lokal.
 
-## 3. Base URL
+## 3. Base URL dan Format Response
+
+Base URL:
 
 `http://localhost:3000`
 
-Respons API menggunakan format JSON, kecuali respons yang tidak memiliki isi.
+Response berhasil menggunakan format:
 
-## 4. Health Check
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+Response gagal menggunakan format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Pesan kesalahan."
+  }
+}
+```
+
+Response koleksi dilengkapi metadata:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "meta": {
+    "jumlah": 0,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 0
+  }
+}
+```
+
+`meta.jumlah` menunjukkan jumlah seluruh data yang sesuai dengan filter, bukan hanya jumlah data pada halaman saat ini.
+
+## 4. Endpoint Health Check
 
 ### GET `/api/health`
 
-Digunakan untuk memeriksa status API.
+Memeriksa status API dan koneksi database.
 
-Kode respons:
-- `200 OK`: API berjalan dengan baik.
+Response berhasil:
+- `200 OK`
 
 ## 5. Endpoint Penawaran
 
-### GET `/api/penawaran`
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| GET | `/api/penawaran` | Mengambil daftar penawaran |
+| GET | `/api/penawaran/:id` | Mengambil detail penawaran |
+| POST | `/api/penawaran` | Membuat penawaran |
+| PUT | `/api/penawaran/:id` | Mengubah seluruh atribut penawaran yang dapat diedit |
+| DELETE | `/api/penawaran/:id` | Menghapus penawaran jika tidak memiliki riwayat pesanan |
 
-Mengambil daftar penawaran makanan.
+### 5.1 GET Daftar Penawaran
 
-Endpoint ini mendukung pencarian, filter, dan paginasi sesuai implementasi API.
+`GET /api/penawaran`
 
-### GET `/api/penawaran/:id`
+Mendukung pencarian, filter, dan paginasi.
 
-Mengambil detail penawaran berdasarkan ID.
+Parameter yang tersedia:
+- `q`: mencari berdasarkan kata kunci.
+- `kategori`: memfilter kategori.
+- `status`: memfilter status penawaran.
+- `tersedia`: memfilter ketersediaan.
+- `page`: menentukan halaman.
+- `limit`: menentukan jumlah data per halaman.
 
-### POST `/api/penawaran`
+Contoh:
 
-Menambahkan penawaran makanan baru. Data dikirim dalam format JSON sesuai field yang diwajibkan API.
+`GET /api/penawaran?q=nasi&tersedia=true&page=1&limit=10`
 
-### PUT `/api/penawaran/:id`
+Parameter dapat digabungkan sesuai kebutuhan.
 
-Memperbarui data penawaran berdasarkan ID.
+### 5.2 POST Penawaran
 
-### DELETE `/api/penawaran/:id`
+`POST /api/penawaran`
 
-Menghapus penawaran berdasarkan ID jika memenuhi ketentuan penghapusan.
+Digunakan untuk membuat penawaran baru. Data dikirim dalam format JSON sesuai field yang diwajibkan API.
 
-Kode respons yang dapat digunakan:
-- `200 OK`: request berhasil.
-- `201 Created`: penawaran berhasil dibuat.
-- `204 No Content`: penawaran berhasil dihapus.
-- `400 Bad Request`: input atau parameter tidak valid.
-- `404 Not Found`: penawaran tidak ditemukan.
-- `409 Conflict`: penghapusan atau perubahan bertentangan dengan kondisi data.
+Response berhasil:
+- `201 Created`
+- Menyertakan data penawaran dan header `Location`.
+
+### 5.3 PUT Penawaran
+
+`PUT /api/penawaran/:id`
+
+Digunakan untuk mengganti seluruh atribut penawaran yang dapat diedit.
+
+Field yang digunakan:
+- `penyediaId`
+- `nama`
+- `kategori`
+- `hargaNormal`
+- `hargaPenawaran`
+- `stok`
+- `satuan`
+- `status`
+- `berakhirPada`
+
+Semua field yang diwajibkan harus dikirim. ID dan waktu pembuatan tidak dikirim oleh client. Penyedia pemilik penawaran tidak dapat diganti.
+
+### 5.4 DELETE Penawaran
+
+`DELETE /api/penawaran/:id`
+
+Penawaran dapat dihapus jika tidak memiliki riwayat pesanan.
+
+Penawaran yang sudah digunakan dalam transaksi akan ditolak dengan `409 Conflict` agar riwayat transaksi tetap terjaga.
+
+Response berhasil:
+- `204 No Content`
+- Tidak memiliki response body.
 
 ## 6. Endpoint Pesanan
 
-### GET `/api/pesanan`
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| GET | `/api/pesanan` | Mengambil daftar pesanan |
+| GET | `/api/pesanan/:id` | Mengambil detail pesanan |
+| POST | `/api/pesanan` | Membuat pesanan |
 
-Mengambil daftar pesanan.
+### 6.1 GET Daftar Pesanan
 
-### GET `/api/pesanan/:id`
+`GET /api/pesanan`
 
-Mengambil detail pesanan berdasarkan ID.
+Mengambil koleksi ringkasan pesanan dengan metadata paginasi.
 
-### POST `/api/pesanan`
+### 6.2 GET Detail Pesanan
 
-Membuat pesanan baru. Data pesanan dikirim dalam format JSON sesuai field yang diwajibkan API.
+`GET /api/pesanan/:id`
 
-Pembuatan pesanan menggunakan transaksi database untuk membantu menjaga konsistensi data dan stok. Jika proses gagal, transaksi dapat dibatalkan agar perubahan tidak tersimpan sebagian.
+Mengambil informasi header pesanan dan detail item pesanan.
 
-Kode respons yang dapat digunakan:
-- `200 OK`: request berhasil.
-- `201 Created`: pesanan berhasil dibuat.
-- `400 Bad Request`: input tidak valid.
-- `404 Not Found`: data tidak ditemukan.
-- `409 Conflict`: pesanan tidak dapat diproses karena kondisi data, misalnya stok tidak mencukupi.
+### 6.3 POST Pesanan
 
-## 7. Pengujian
+`POST /api/pesanan`
 
-Jalankan server menggunakan perintah `npm run dev`.
+Membuat pesanan baru menggunakan data JSON.
 
-Untuk menjalankan pengujian otomatis, gunakan perintah `npm run api:test`.
+Field pesanan:
+- `emailPembeli`: email pembeli.
+- `penawaranId`: ID penawaran yang dipesan.
+- `kuantitas`: jumlah makanan yang dipesan.
+
+Contoh:
+
+```json
+{
+  "emailPembeli": "pembeli@example.com",
+  "penawaranId": "17",
+  "kuantitas": 1
+}
+```
+
+ID penawaran dikirim sebagai string. Contoh ID tersebut hanya ilustrasi.
+
+Ketentuan pemesanan:
+- Stok harus mencukupi.
+- Pesanan harus berasal dari satu penyedia.
+- Harga disimpan sebagai snapshot saat transaksi.
+- Perubahan harga penawaran setelah transaksi tidak mengubah harga pesanan sebelumnya.
+- Proses pesanan menggunakan transaksi database.
+- Jika proses gagal, transaksi dibatalkan agar tidak terjadi perubahan data sebagian.
+
+Response berhasil:
+- `201 Created`
+- Menyertakan data pesanan dan header `Location`.
+
+## 7. Kode Status HTTP
+
+| Status | Keterangan |
+|---|---|
+| 200 | Request berhasil |
+| 201 | Resource berhasil dibuat |
+| 204 | Berhasil tanpa response body |
+| 400 | Input atau parameter tidak valid |
+| 404 | Resource tidak ditemukan |
+| 409 | Terjadi konflik aturan bisnis |
+| 413 | Ukuran request terlalu besar |
+| 415 | Format Content-Type tidak didukung |
+| 500 | Terjadi kesalahan server |
+
+## 8. Validasi dan Keamanan
+
+API menerapkan beberapa perlindungan:
+- Validasi path parameter dan query parameter.
+- Validasi format JSON dan tipe data.
+- Validasi nilai harga, stok, status, dan waktu.
+- Query PostgreSQL menggunakan parameter.
+- Transaksi database menggunakan mekanisme rollback ketika proses gagal.
+- Penanganan kesalahan menggunakan format response yang konsisten.
+- File `.env` tidak boleh diunggah ke repositori publik.
+
+API ini belum dilengkapi autentikasi dan otorisasi sehingga hanya digunakan untuk praktikum lokal.
+
+## 9. Pengujian API
+
+Jalankan server:
+
+```bash
+npm run dev
+```
+
+Jalankan pengujian otomatis:
+
+```bash
+npm run api:test
+```
 
 Pengujian dapat membuat, mengubah, atau menghapus data. Gunakan database pengembangan dan periksa dampaknya setelah pengujian.
 
-## 8. Keamanan
+Pengujian konkurensi:
 
-- Validasi input diterapkan pada endpoint API.
-- Query database menggunakan parameter untuk membantu mencegah SQL injection.
-- File `.env` tidak boleh dibagikan atau diunggah ke repositori publik.
+```bash
+node scripts/uji-konkurensi.js
+```
+
+Pengujian konkurensi digunakan untuk memastikan dua pesanan yang masuk secara bersamaan tidak dapat mengambil stok yang sama melebihi jumlah tersedia.
+
+Hasil aktual pengujian dicatat dalam:
+
+`docs/hasil-uji-chapter7.md`
+
+## 10. Struktur Alur API
+
+Alur request secara umum:
+
+1. Router menerima request berdasarkan method dan URL.
+2. Controller membaca input dan menjalankan validasi.
+3. Repository menjalankan query ke PostgreSQL.
+4. Service mengatur aturan bisnis dan transaksi pesanan.
+5. API mengirim response kepada client.

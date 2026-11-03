@@ -25,7 +25,7 @@ Hasil ini merujuk pada pengujian sebelumnya. Jalankan kembali pengujian akhir se
 ## Pengujian Konkurensi
 
 - Script: scripts/uji-konkurensi.js
-- Penawaran uji: ID 10
+- Penawaran uji: ID 17
 - Dua request pesanan dikirim secara bersamaan.
 - Hasil aktual: PASS
 - Status HTTP: satu 201 Created dan satu 409 Conflict.

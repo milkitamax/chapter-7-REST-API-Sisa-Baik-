@@ -58,3 +58,7 @@ Pengujian dapat mengubah data, jadi gunakan database pengembangan.
 - API menggunakan format JSON.
 - Validasi input dan penanganan kesalahan diterapkan pada endpoint API.
 - File `.env` berisi konfigurasi lokal dan tidak boleh dibagikan ke repositori publik.
+
+- Proyek ini menggunakan data fiktif untuk keperluan praktikum lokal.
+- API belum dilengkapi autentikasi dan belum ditujukan untuk layanan transaksi publik.
+- Data pembeli pada pesanan menggunakan emailPembeli dan penawaranId.
